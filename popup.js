@@ -169,13 +169,7 @@ async function handleSolve() {
       throw new Error("Open a regular website tab before using Solve.");
     }
 
-    const [result] = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: runSolveOnPage,
-      args: [state.moves],
-    });
-
-    const response = result?.result;
+    const response = await solveOnTab(tab.id);
 
     if (!response?.status) {
       throw new Error("The page did not respond to the solve request.");
@@ -199,6 +193,14 @@ async function handleSolve() {
 function getSolveErrorMessage(error) {
   if (chrome.runtime.lastError?.message) {
     return chrome.runtime.lastError.message;
+  }
+
+  if (typeof error?.message === "string" && error.message.includes("executeScript")) {
+    return "Reload the extension in chrome://extensions so the new permissions are applied, then refresh the page and try again.";
+  }
+
+  if (typeof error?.message === "string" && error.message.includes("Receiving end does not exist")) {
+    return "Refresh the page after reloading the extension, then try Solve again.";
   }
 
   return error?.message || "An unknown error occurred while solving.";
@@ -460,6 +462,22 @@ function isValidPoint(point, gridSize) {
     && point.x < gridSize
     && point.y >= 0
     && point.y < gridSize;
+}
+
+async function solveOnTab(tabId) {
+  if (chrome.scripting?.executeScript) {
+    const [result] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: runSolveOnPage,
+      args: [state.moves],
+    });
+    return result?.result;
+  }
+
+  return chrome.tabs.sendMessage(tabId, {
+    type: "SOLVE_PATH",
+    moves: state.moves,
+  });
 }
 
 async function runSolveOnPage(moves) {
