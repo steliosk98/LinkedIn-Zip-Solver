@@ -148,18 +148,45 @@ body {
   font-size: 12px;
 }
 
+.size-picker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.size-picker select {
+  min-width: 88px;
+  padding: 8px 10px;
+  border: 1px solid rgba(44, 36, 23, 0.14);
+  border-radius: 12px;
+  background: #fffdfa;
+  color: var(--text);
+  font: inherit;
+}
+
+.size-picker select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .canvas-wrap {
   margin-top: 14px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(44, 36, 23, 0.08);
   background: #fffdfa;
+  cursor: crosshair;
 }
 
 canvas {
   display: block;
   width: 100%;
-  height: 220px;
+  height: 330px;
 }
 
 .controls {

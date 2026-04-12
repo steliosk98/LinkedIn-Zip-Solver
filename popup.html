@@ -11,27 +11,37 @@
       <header class="hero">
         <p class="eyebrow">LinkedIn ZIP Solver</p>
         <h1>Draw the route, then replay it.</h1>
-        <p class="subcopy">Use the arrow keys inside the capture pad to build one locked path.</p>
+        <p class="subcopy">Choose a board size, draw one route, then lock it for replay.</p>
       </header>
 
       <section class="panel">
         <div class="panel-header">
           <div>
             <h2>Path</h2>
-            <p class="panel-copy">Click the pad below, then press arrow keys.</p>
+            <p class="panel-copy">Arm the canvas, choose a start cell, then drag across the grid.</p>
           </div>
           <span id="statusBadge" class="badge">No path</span>
         </div>
 
         <button id="captureArea" class="capture-area" type="button" aria-describedby="moveSummary">
           <span class="capture-title">Path Capture</span>
-          <span class="capture-copy">Click here and use your keyboard arrows</span>
+          <span class="capture-copy">Click to arm drawing mode for the grid below</span>
         </button>
 
         <p id="moveSummary" class="summary">0 moves recorded.</p>
 
+        <label class="size-picker" for="gridSizeSelect">
+          <span>Grid size</span>
+          <select id="gridSizeSelect">
+            <option value="5">5x5</option>
+            <option value="7">7x7</option>
+            <option value="9">9x9</option>
+            <option value="11">11x11</option>
+          </select>
+        </label>
+
         <div class="canvas-wrap">
-          <canvas id="pathCanvas" width="320" height="220" aria-label="Path preview"></canvas>
+          <canvas id="pathCanvas" width="330" height="330" aria-label="Path preview"></canvas>
         </div>
 
         <div class="controls">
