@@ -1,6 +1,5 @@
 const SOLVE_DELAY_MS = 85;
 const VALID_MOVES = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-const ZIP_HINTS = ["zip", "pinpoint", "linkedin game"];
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type !== "SOLVE_PATH") {
@@ -27,18 +26,11 @@ async function solvePath(moves) {
     };
   }
 
-  if (!looksLikeLinkedInZipPage()) {
-    return {
-      status: "error",
-      message: "This tab does not look like the LinkedIn ZIP game.",
-    };
-  }
-
   const target = findGameTarget();
   if (!target) {
     return {
       status: "error",
-      message: "A focusable game target was not found on this page.",
+      message: "A focusable target was not found on this page.",
     };
   }
 
@@ -62,7 +54,7 @@ async function solvePath(moves) {
   if (signalsMatch(beforeSignal, afterSignal)) {
     return {
       status: "unsupported",
-      message: "The page did not show any response to scripted arrow keys. LinkedIn may block synthetic input here.",
+      message: "The page did not show any response to scripted arrow keys. This site may block synthetic input here.",
     };
   }
 
@@ -70,15 +62,6 @@ async function solvePath(moves) {
     status: "success",
     message: `Replayed ${moves.length} moves on the current page.`,
   };
-}
-
-function looksLikeLinkedInZipPage() {
-  if (location.hostname !== "www.linkedin.com") {
-    return false;
-  }
-
-  const text = document.body?.innerText?.slice(0, 4000).toLowerCase() || "";
-  return ZIP_HINTS.some((hint) => text.includes(hint)) || location.href.toLowerCase().includes("games");
 }
 
 function findGameTarget() {

@@ -155,20 +155,27 @@ async function handleSolve() {
     return;
   }
 
-  setStatus("Solving", "Trying the locked path on the active LinkedIn tab.");
+  setStatus("Solving", "Trying the locked path on the active tab.");
   render();
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
     if (!tab?.id) {
-      throw new Error("Open the LinkedIn ZIP tab and try again.");
+      throw new Error("Open the page you want to test and try again.");
     }
 
-    const response = await chrome.tabs.sendMessage(tab.id, {
-      type: "SOLVE_PATH",
-      moves: state.moves,
+    if (!/^https?:/.test(tab.url || "")) {
+      throw new Error("Open a regular website tab before using Solve.");
+    }
+
+    const [result] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: runSolveOnPage,
+      args: [state.moves],
     });
+
+    const response = result?.result;
 
     if (!response?.status) {
       throw new Error("The page did not respond to the solve request.");
@@ -192,10 +199,6 @@ async function handleSolve() {
 function getSolveErrorMessage(error) {
   if (chrome.runtime.lastError?.message) {
     return chrome.runtime.lastError.message;
-  }
-
-  if (typeof error?.message === "string" && error.message.includes("Receiving end does not exist")) {
-    return "Open a LinkedIn ZIP page before using Solve.";
   }
 
   return error?.message || "An unknown error occurred while solving.";
@@ -457,4 +460,130 @@ function isValidPoint(point, gridSize) {
     && point.x < gridSize
     && point.y >= 0
     && point.y < gridSize;
+}
+
+async function runSolveOnPage(moves) {
+  const validMoves = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+  const solveDelayMs = 85;
+
+  if (!Array.isArray(moves) || moves.length === 0 || moves.some((move) => !validMoves.has(move))) {
+    return {
+      status: "error",
+      message: "The locked path is empty or invalid.",
+    };
+  }
+
+  const target = findTarget();
+  if (!target) {
+    return {
+      status: "error",
+      message: "A focusable target was not found on this page.",
+    };
+  }
+
+  target.focus({ preventScroll: true });
+
+  if (document.activeElement !== target) {
+    return {
+      status: "error",
+      message: "The page could not be focused. Click inside the page and try again.",
+    };
+  }
+
+  const beforeSignal = captureSignal();
+  for (const move of moves) {
+    dispatchArrow(target, move);
+    await delay(solveDelayMs);
+  }
+  await delay(140);
+  const afterSignal = captureSignal();
+
+  if (JSON.stringify(beforeSignal) === JSON.stringify(afterSignal)) {
+    return {
+      status: "unsupported",
+      message: "The page did not show any response to scripted arrow keys. This site may block synthetic input here.",
+    };
+  }
+
+  return {
+    status: "success",
+    message: `Replayed ${moves.length} moves on the current page.`,
+  };
+
+  function findTarget() {
+    const selectors = [
+      ":focus",
+      "input",
+      "textarea",
+      "[contenteditable='true']",
+      "[role='application']",
+      "[role='grid']",
+      "[tabindex='0']",
+      "main",
+      "body",
+    ];
+
+    for (const selector of selectors) {
+      const nodes = Array.from(document.querySelectorAll(selector));
+      const candidate = nodes.find((node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+      if (candidate) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  function dispatchArrow(targetNode, key) {
+    const keyCode = keyToCode(key);
+    const eventInit = {
+      key,
+      code: key,
+      keyCode,
+      which: keyCode,
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    };
+
+    targetNode.dispatchEvent(new KeyboardEvent("keydown", eventInit));
+    targetNode.dispatchEvent(new KeyboardEvent("keyup", eventInit));
+  }
+
+  function keyToCode(key) {
+    if (key === "ArrowUp") {
+      return 38;
+    }
+    if (key === "ArrowDown") {
+      return 40;
+    }
+    if (key === "ArrowLeft") {
+      return 37;
+    }
+    return 39;
+  }
+
+  function captureSignal() {
+    return {
+      activeTag: document.activeElement?.tagName || "",
+      title: document.title,
+      bodyText: document.body?.innerText?.slice(0, 1200) || "",
+      focusSignature: Array.from(document.querySelectorAll("[aria-label], [data-test-id], [class]"))
+        .slice(0, 25)
+        .map((node) => {
+          const label = node.getAttribute("aria-label") || "";
+          const testId = node.getAttribute("data-test-id") || "";
+          const className = typeof node.className === "string" ? node.className : "";
+          return `${node.tagName}:${label}:${testId}:${className}`;
+        })
+        .join("|"),
+    };
+  }
+
+  function delay(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+  }
 }
