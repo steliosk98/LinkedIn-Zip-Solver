@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn ZIP Solver</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <header class="hero">
+        <p class="eyebrow">LinkedIn ZIP Solver</p>
+        <h1>Draw the route, then replay it.</h1>
+        <p class="subcopy">Use the arrow keys inside the capture pad to build one locked path.</p>
+      </header>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Path</h2>
+            <p class="panel-copy">Click the pad below, then press arrow keys.</p>
+          </div>
+          <span id="statusBadge" class="badge">No path</span>
+        </div>
+
+        <button id="captureArea" class="capture-area" type="button" aria-describedby="moveSummary">
+          <span class="capture-title">Path Capture</span>
+          <span class="capture-copy">Click here and use your keyboard arrows</span>
+        </button>
+
+        <p id="moveSummary" class="summary">0 moves recorded.</p>
+
+        <div class="canvas-wrap">
+          <canvas id="pathCanvas" width="320" height="220" aria-label="Path preview"></canvas>
+        </div>
+
+        <div class="controls">
+          <button id="clearButton" class="secondary" type="button">Clear</button>
+          <button id="lockButton" class="primary" type="button">Path Drawn</button>
+          <button id="unlockButton" class="secondary" type="button">Unlock</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Solve</h2>
+            <p class="panel-copy">Replay the locked path on the current LinkedIn ZIP tab.</p>
+          </div>
+        </div>
+
+        <button id="solveButton" class="solve-button" type="button">Solve</button>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
