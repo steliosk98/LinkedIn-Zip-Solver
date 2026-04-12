@@ -1,6 +1,8 @@
 const STORAGE_KEY = "zipSolverPath";
 const VALID_MOVES = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 const GRID_SIZES = [5, 7, 9, 11];
+const MIN_GRID_SIZE = 3;
+const MAX_GRID_SIZE = 25;
 
 const state = {
   moves: [],
@@ -18,6 +20,7 @@ const elements = {
   statusBadge: document.getElementById("statusBadge"),
   moveSummary: document.getElementById("moveSummary"),
   gridSizeSelect: document.getElementById("gridSizeSelect"),
+  gridSizeCustom: document.getElementById("gridSizeCustom"),
   canvas: document.getElementById("pathCanvas"),
   clearButton: document.getElementById("clearButton"),
   lockButton: document.getElementById("lockButton"),
@@ -42,6 +45,7 @@ async function initialize() {
 function bindEvents() {
   elements.captureArea.addEventListener("click", handleArmDrawing);
   elements.gridSizeSelect.addEventListener("change", handleGridSizeChange);
+  elements.gridSizeCustom.addEventListener("change", handleCustomGridSizeChange);
   elements.clearButton.addEventListener("click", handleClear);
   elements.lockButton.addEventListener("click", handleLock);
   elements.unlockButton.addEventListener("click", handleUnlock);
@@ -57,7 +61,7 @@ async function hydrateFromStorage() {
   const savedPath = stored[STORAGE_KEY];
 
   if (savedPath && Array.isArray(savedPath.moves)) {
-    if (GRID_SIZES.includes(savedPath.gridSize)) {
+    if (isAllowedGridSize(savedPath.gridSize)) {
       state.gridSize = savedPath.gridSize;
     }
     state.moves = savedPath.moves.filter((move) => VALID_MOVES.has(move));
@@ -90,27 +94,37 @@ function handleArmDrawing() {
 }
 
 async function handleGridSizeChange(event) {
+  if (event.target.value === "custom") {
+    elements.gridSizeCustom.focus();
+    render();
+    return;
+  }
+
   const nextSize = Number(event.target.value);
-  if (!GRID_SIZES.includes(nextSize) || nextSize === state.gridSize) {
+  if (!isAllowedGridSize(nextSize) || nextSize === state.gridSize) {
     render();
     return;
   }
 
-  if (state.locked) {
-    elements.gridSizeSelect.value = String(state.gridSize);
-    setStatus("Locked", "Unlock and clear the current path before changing the grid size.");
+  await applyGridSize(nextSize);
+}
+
+async function handleCustomGridSizeChange(event) {
+  const requestedSize = Number(event.target.value);
+  if (!Number.isInteger(requestedSize)) {
     render();
     return;
   }
 
-  state.gridSize = nextSize;
-  state.moves = [];
-  state.startPoint = getDefaultStart(nextSize);
-  state.drawArmed = false;
-  state.isPointerDown = false;
-  await persistState();
-  setStatus("No path", `Grid size set to ${nextSize}x${nextSize}. Click Path Capture to start drawing.`);
-  render();
+  const nextSize = clamp(requestedSize, MIN_GRID_SIZE, MAX_GRID_SIZE);
+  event.target.value = String(nextSize);
+
+  if (nextSize === state.gridSize) {
+    render();
+    return;
+  }
+
+  await applyGridSize(nextSize);
 }
 
 async function handleClear() {
@@ -228,13 +242,16 @@ function render() {
   elements.statusBadge.textContent = state.status;
   elements.moveSummary.textContent = `${moveCount} move${moveCount === 1 ? "" : "s"} recorded.`;
   elements.feedback.textContent = state.feedback;
-  elements.gridSizeSelect.value = String(state.gridSize);
+  const isPreset = GRID_SIZES.includes(state.gridSize);
+  elements.gridSizeSelect.value = isPreset ? String(state.gridSize) : "custom";
+  elements.gridSizeCustom.value = isPreset ? "" : String(state.gridSize);
 
   elements.lockButton.disabled = state.locked || moveCount === 0;
   elements.unlockButton.disabled = !state.locked;
   elements.solveButton.disabled = !state.locked || moveCount === 0;
   elements.clearButton.disabled = state.locked || moveCount === 0;
   elements.gridSizeSelect.disabled = state.locked;
+  elements.gridSizeCustom.disabled = state.locked;
 
   elements.captureArea.setAttribute("aria-disabled", String(state.locked));
   elements.captureArea.querySelector(".capture-copy").textContent = state.locked
@@ -462,6 +479,27 @@ function isValidPoint(point, gridSize) {
     && point.x < gridSize
     && point.y >= 0
     && point.y < gridSize;
+}
+
+async function applyGridSize(nextSize) {
+  if (state.locked) {
+    setStatus("Locked", "Unlock and clear the current path before changing the grid size.");
+    render();
+    return;
+  }
+
+  state.gridSize = nextSize;
+  state.moves = [];
+  state.startPoint = getDefaultStart(nextSize);
+  state.drawArmed = false;
+  state.isPointerDown = false;
+  await persistState();
+  setStatus("No path", `Grid size set to ${nextSize}x${nextSize}. Click Path Capture to start drawing.`);
+  render();
+}
+
+function isAllowedGridSize(value) {
+  return Number.isInteger(value) && value >= MIN_GRID_SIZE && value <= MAX_GRID_SIZE;
 }
 
 async function solveOnTab(tabId) {

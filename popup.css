@@ -151,7 +151,7 @@ body {
 .size-picker {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-top: 12px;
   color: var(--muted);
@@ -159,7 +159,14 @@ body {
   font-weight: 600;
 }
 
-.size-picker select {
+.size-inputs {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.size-picker select,
+.custom-size input {
   min-width: 88px;
   padding: 8px 10px;
   border: 1px solid rgba(44, 36, 23, 0.14);
@@ -169,9 +176,26 @@ body {
   font: inherit;
 }
 
-.size-picker select:disabled {
+.size-picker select:disabled,
+.custom-size input:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+.custom-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-size span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.custom-size input {
+  width: 74px;
 }
 
 .canvas-wrap {

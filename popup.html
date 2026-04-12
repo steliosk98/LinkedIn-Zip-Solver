@@ -32,12 +32,19 @@
 
         <label class="size-picker" for="gridSizeSelect">
           <span>Grid size</span>
-          <select id="gridSizeSelect">
-            <option value="5">5x5</option>
-            <option value="7">7x7</option>
-            <option value="9">9x9</option>
-            <option value="11">11x11</option>
-          </select>
+          <div class="size-inputs">
+            <select id="gridSizeSelect">
+              <option value="5">5x5</option>
+              <option value="7">7x7</option>
+              <option value="9">9x9</option>
+              <option value="11">11x11</option>
+              <option value="custom">Custom</option>
+            </select>
+            <label class="custom-size" for="gridSizeCustom">
+              <span>Custom</span>
+              <input id="gridSizeCustom" type="number" min="3" max="25" step="1" inputmode="numeric" placeholder="13">
+            </label>
+          </div>
         </label>
 
         <div class="canvas-wrap">

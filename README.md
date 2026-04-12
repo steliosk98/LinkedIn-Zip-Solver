@@ -8,7 +8,7 @@ This project started as a LinkedIn ZIP game helper and currently supports a broa
 
 The popup lets you:
 
-- choose a grid size: `5x5`, `7x7`, `9x9`, or `11x11`
+- choose a grid size from presets or enter a custom size from `3x3` to `25x25`
 - click `Path Capture`
 - pick a starting cell
 - drag cell-by-cell to draw a path
