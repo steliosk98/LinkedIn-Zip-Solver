@@ -469,7 +469,11 @@ async function solveOnTab(tabId) {
     const [result] = await chrome.scripting.executeScript({
       target: { tabId },
       func: runSolveOnPage,
-      args: [state.moves],
+      args: [{
+        moves: state.moves,
+        gridSize: state.gridSize,
+        startPoint: state.startPoint,
+      }],
     });
     return result?.result;
   }
@@ -477,12 +481,17 @@ async function solveOnTab(tabId) {
   return chrome.tabs.sendMessage(tabId, {
     type: "SOLVE_PATH",
     moves: state.moves,
+    gridSize: state.gridSize,
+    startPoint: state.startPoint,
   });
 }
 
-async function runSolveOnPage(moves) {
+async function runSolveOnPage(payload) {
   const validMoves = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
   const solveDelayMs = 85;
+  const moves = payload?.moves;
+  const gridSize = payload?.gridSize;
+  const startPoint = payload?.startPoint;
 
   if (!Array.isArray(moves) || moves.length === 0 || moves.some((move) => !validMoves.has(move))) {
     return {
@@ -509,6 +518,13 @@ async function runSolveOnPage(moves) {
   }
 
   const beforeSignal = captureSignal();
+  window.dispatchEvent(new CustomEvent("zip-solver-run", {
+    detail: {
+      moves,
+      gridSize,
+      startPoint,
+    },
+  }));
   for (const move of moves) {
     dispatchArrow(target, move);
     await delay(solveDelayMs);
@@ -534,6 +550,7 @@ async function runSolveOnPage(moves) {
       "input",
       "textarea",
       "[contenteditable='true']",
+      "[data-zip-solver-target='true']",
       "[role='application']",
       "[role='grid']",
       "[tabindex='0']",

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZIP Solver Test Page</title>
+    <link rel="stylesheet" href="test-page.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero">
+        <p class="eyebrow">ZIP Solver Test Harness</p>
+        <h1>Watch the replay happen on a live board.</h1>
+        <p class="subcopy">The timer starts on page load. When you click <strong>Solve</strong> in the extension, this page will sync to the selected grid and draw the route as arrow-key input arrives.</p>
+      </section>
+
+      <section class="hud">
+        <article class="card stat-card">
+          <p class="label">Elapsed</p>
+          <p id="timer" class="timer">00:00.0</p>
+        </article>
+        <article class="card stat-card">
+          <p class="label">Grid</p>
+          <p id="gridSizeLabel" class="value">11x11</p>
+        </article>
+        <article class="card stat-card">
+          <p class="label">Moves Seen</p>
+          <p id="movesSeen" class="value">0</p>
+        </article>
+      </section>
+
+      <section class="card board-card">
+        <div class="board-header">
+          <div>
+            <h2>Replay Board</h2>
+            <p>Click inside the board if you want to test with your own physical arrow keys too.</p>
+          </div>
+          <span id="boardStatus" class="badge">Waiting</span>
+        </div>
+
+        <div
+          id="board"
+          class="board"
+          tabindex="0"
+          data-zip-solver-target="true"
+          aria-label="ZIP solver test board"
+        ></div>
+
+        <div class="legend">
+          <span><i class="swatch start"></i>Start</span>
+          <span><i class="swatch path"></i>Path</span>
+          <span><i class="swatch end"></i>End</span>
+        </div>
+
+        <p id="eventLog" class="event-log">Board ready. Waiting for replay.</p>
+      </section>
+    </main>
+
+    <script src="test-page.js"></script>
+  </body>
+</html>

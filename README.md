@@ -32,6 +32,9 @@ The popup lets you:
 - `popup.css`: popup styling
 - `popup.js`: popup state, drawing UI, storage, and solve trigger
 - `content.js`: page-side keyboard replay logic used for compatibility testing
+- `test-page.html`: local visual test harness for replay verification
+- `test-page.css`: styling for the test harness board and timer
+- `test-page.js`: timer, board rendering, and arrow-key replay visualization
 
 ## How It Works
 
@@ -67,6 +70,28 @@ If you update the extension files:
 
 1. Click `Reload` on the extension card
 2. Refresh the tab you want to test
+
+## Local Test Page
+
+To test the extension against a page you control, serve this repo locally and open the included harness page:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then visit:
+
+```text
+http://localhost:8000/test-page.html
+```
+
+The test page:
+
+- draws a live grid
+- starts a timer as soon as the page loads
+- listens for replayed arrow-key input
+- syncs to the extension's chosen grid size and start point when you click `Solve`
+- shows the path as it is drawn on the board
 
 ## Testing Notes
 

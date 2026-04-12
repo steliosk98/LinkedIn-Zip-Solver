@@ -6,7 +6,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return undefined;
   }
 
-  solvePath(message.moves)
+  solvePath(message)
     .then(sendResponse)
     .catch((error) => {
       sendResponse({
@@ -18,7 +18,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return true;
 });
 
-async function solvePath(moves) {
+async function solvePath(payload) {
+  const moves = payload?.moves;
+
   if (!Array.isArray(moves) || moves.length === 0 || moves.some((move) => !VALID_MOVES.has(move))) {
     return {
       status: "error",
@@ -44,6 +46,13 @@ async function solvePath(moves) {
   }
 
   const beforeSignal = captureAcceptanceSignal();
+  window.dispatchEvent(new CustomEvent("zip-solver-run", {
+    detail: {
+      moves,
+      gridSize: payload?.gridSize,
+      startPoint: payload?.startPoint,
+    },
+  }));
   for (const move of moves) {
     dispatchArrow(target, move);
     await delay(SOLVE_DELAY_MS);
@@ -66,6 +75,7 @@ async function solvePath(moves) {
 
 function findGameTarget() {
   const selectors = [
+    "[data-zip-solver-target='true']",
     "[role='application']",
     "[role='grid']",
     "[tabindex='0']",
