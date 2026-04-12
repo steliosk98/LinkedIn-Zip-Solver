@@ -15,6 +15,8 @@ The popup lets you:
 - lock the path with `Path Drawn`
 - replay the saved moves with `Solve`
 
+Tip: the included `test-page.html` is the quickest way to verify the replay visually while tuning paths and board sizes.
+
 ## Screenshots
 
 ### Drawing a path
