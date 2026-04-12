@@ -7,6 +7,7 @@ const state = {
   pathPoints: [getDefaultStart(11)],
   movesSeen: 0,
   startedAt: performance.now(),
+  finishedAt: null,
 };
 
 const elements = {
@@ -52,6 +53,10 @@ function handleKeydown(event) {
     return;
   }
 
+  if (state.finishedAt !== null) {
+    return;
+  }
+
   const nextPoint = movePoint(state.currentPoint, event.key);
   if (!isValidPoint(nextPoint, state.gridSize)) {
     elements.boardStatus.textContent = "Blocked";
@@ -64,6 +69,7 @@ function handleKeydown(event) {
   state.movesSeen += 1;
   elements.boardStatus.textContent = event.isTrusted ? "Manual" : "Solved";
   elements.eventLog.textContent = `${event.isTrusted ? "Manual" : "Synthetic"} ${event.key} received at ${formatElapsed(performance.now() - state.startedAt)}.`;
+  maybeFinishBoard();
   render();
 }
 
@@ -73,6 +79,7 @@ function resetBoard(gridSize, startPoint) {
   state.currentPoint = { ...startPoint };
   state.pathPoints = [{ ...startPoint }];
   state.movesSeen = 0;
+  state.finishedAt = null;
   buildBoard();
   render();
 }
@@ -117,7 +124,8 @@ function render() {
 }
 
 function updateTimer() {
-  elements.timer.textContent = formatElapsed(performance.now() - state.startedAt);
+  const endTime = state.finishedAt ?? performance.now();
+  elements.timer.textContent = formatElapsed(endTime - state.startedAt);
 }
 
 function formatElapsed(milliseconds) {
@@ -159,4 +167,15 @@ function isValidPoint(point, gridSize) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function maybeFinishBoard() {
+  const visitedCells = new Set(state.pathPoints.map((point) => `${point.x},${point.y}`)).size;
+  const totalCells = state.gridSize * state.gridSize;
+
+  if (visitedCells === totalCells) {
+    state.finishedAt = performance.now();
+    elements.boardStatus.textContent = "Complete";
+    elements.eventLog.textContent = `Board filled in ${formatElapsed(state.finishedAt - state.startedAt)}.`;
+  }
 }
