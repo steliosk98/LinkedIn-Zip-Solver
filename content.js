@@ -1,4 +1,5 @@
-const SOLVE_DELAY_MS = 85;
+const SOLVE_DELAY_MS = 12;
+const SOLVE_SETTLE_MS = 24;
 const VALID_MOVES = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -57,7 +58,7 @@ async function solvePath(payload) {
     dispatchArrow(target, move);
     await delay(SOLVE_DELAY_MS);
   }
-  await delay(140);
+  await delay(SOLVE_SETTLE_MS);
   const afterSignal = captureAcceptanceSignal();
 
   if (signalsMatch(beforeSignal, afterSignal)) {

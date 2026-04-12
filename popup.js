@@ -488,7 +488,8 @@ async function solveOnTab(tabId) {
 
 async function runSolveOnPage(payload) {
   const validMoves = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
-  const solveDelayMs = 85;
+  const solveDelayMs = 12;
+  const solveSettleMs = 24;
   const moves = payload?.moves;
   const gridSize = payload?.gridSize;
   const startPoint = payload?.startPoint;
@@ -529,7 +530,7 @@ async function runSolveOnPage(payload) {
     dispatchArrow(target, move);
     await delay(solveDelayMs);
   }
-  await delay(140);
+  await delay(solveSettleMs);
   const afterSignal = captureSignal();
 
   if (JSON.stringify(beforeSignal) === JSON.stringify(afterSignal)) {
