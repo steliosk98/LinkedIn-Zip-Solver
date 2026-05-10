@@ -148,6 +148,37 @@ body {
   font-size: 12px;
 }
 
+.auto-fill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid rgba(15, 118, 110, 0.22);
+}
+
+.auto-fill:hover:not(:disabled),
+.auto-fill:focus-visible {
+  outline: none;
+  background: rgba(15, 118, 110, 0.14);
+  border-color: rgba(15, 118, 110, 0.4);
+}
+
+.auto-fill-source {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
 .size-picker {
   display: flex;
   justify-content: space-between;

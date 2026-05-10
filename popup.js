@@ -3,6 +3,7 @@ const VALID_MOVES = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"])
 const GRID_SIZES = [5, 7, 9, 11];
 const MIN_GRID_SIZE = 3;
 const MAX_GRID_SIZE = 25;
+const AUTO_FILL_URL = "https://www.zipgameonline.com/linkedin-zip-answers";
 
 const state = {
   moves: [],
@@ -17,6 +18,7 @@ const state = {
 
 const elements = {
   captureArea: document.getElementById("captureArea"),
+  autoFillButton: document.getElementById("autoFillButton"),
   statusBadge: document.getElementById("statusBadge"),
   moveSummary: document.getElementById("moveSummary"),
   gridSizeSelect: document.getElementById("gridSizeSelect"),
@@ -44,6 +46,7 @@ async function initialize() {
 
 function bindEvents() {
   elements.captureArea.addEventListener("click", handleArmDrawing);
+  elements.autoFillButton.addEventListener("click", handleAutoFill);
   elements.gridSizeSelect.addEventListener("change", handleGridSizeChange);
   elements.gridSizeCustom.addEventListener("change", handleCustomGridSizeChange);
   elements.clearButton.addEventListener("click", handleClear);
@@ -164,6 +167,106 @@ async function handleUnlock() {
   render();
 }
 
+async function handleAutoFill() {
+  if (elements.autoFillButton.disabled) {
+    return;
+  }
+
+  elements.autoFillButton.disabled = true;
+  setStatus("Fetching", "Loading today's answer from zipgameonline.com.");
+  render();
+
+  try {
+    const response = await fetch(AUTO_FILL_URL, { credentials: "omit" });
+    if (!response.ok) {
+      throw new Error(`The answers page returned HTTP ${response.status}.`);
+    }
+
+    const html = await response.text();
+    const solution = extractTodayAnswer(html);
+
+    if (!solution) {
+      throw new Error("Could not find today's puzzle path on the answers page.");
+    }
+
+    if (!isAllowedGridSize(solution.gridSize)) {
+      throw new Error(`Today's grid is ${solution.gridSize}x${solution.gridSize}, which this popup does not support.`);
+    }
+
+    state.gridSize = solution.gridSize;
+    state.startPoint = solution.startPoint;
+    state.moves = solution.moves;
+    state.locked = true;
+    state.drawArmed = false;
+    state.isPointerDown = false;
+    await persistState();
+    setStatus("Locked", `Loaded today's ${solution.gridSize}x${solution.gridSize} answer (${solution.moves.length} moves). Click Solve to replay.`);
+  } catch (error) {
+    setStatus("Error", error?.message || "Could not load today's answer.");
+  } finally {
+    render();
+  }
+}
+
+function extractTodayAnswer(html) {
+  const pathRegex = /<path\s+d="(M\s+\d+(?:\.\d+)?\s+\d+(?:\.\d+)?(?:\s+L\s+\d+(?:\.\d+)?\s+\d+(?:\.\d+)?){8,})"/g;
+  let match;
+  while ((match = pathRegex.exec(html)) !== null) {
+    const points = parsePathPoints(match[1]);
+    if (!points) {
+      continue;
+    }
+    const moves = pointsToMoves(points);
+    if (!moves) {
+      continue;
+    }
+    const maxCoord = points.reduce((max, point) => Math.max(max, point.x, point.y), 0);
+    return {
+      gridSize: maxCoord + 1,
+      startPoint: points[0],
+      moves,
+    };
+  }
+  return null;
+}
+
+function parsePathPoints(d) {
+  const tokens = d.trim().split(/\s+/);
+  const points = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const command = tokens[i];
+    if (command !== "M" && command !== "L") {
+      return null;
+    }
+    const xRaw = tokens[i + 1];
+    const yRaw = tokens[i + 2];
+    if (xRaw === undefined || yRaw === undefined) {
+      return null;
+    }
+    const x = Math.floor(Number(xRaw));
+    const y = Math.floor(Number(yRaw));
+    if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0) {
+      return null;
+    }
+    points.push({ x, y });
+    i += 3;
+  }
+  return points.length >= 2 ? points : null;
+}
+
+function pointsToMoves(points) {
+  const moves = [];
+  for (let i = 1; i < points.length; i += 1) {
+    const move = getMoveBetween(points[i - 1], points[i]);
+    if (!move) {
+      return null;
+    }
+    moves.push(move);
+  }
+  return moves;
+}
+
 async function handleSolve() {
   if (!state.locked || !state.moves.length) {
     return;
@@ -252,6 +355,9 @@ function render() {
   elements.clearButton.disabled = state.locked || moveCount === 0;
   elements.gridSizeSelect.disabled = state.locked;
   elements.gridSizeCustom.disabled = state.locked;
+  if (state.status !== "Fetching") {
+    elements.autoFillButton.disabled = false;
+  }
 
   elements.captureArea.setAttribute("aria-disabled", String(state.locked));
   elements.captureArea.querySelector(".capture-copy").textContent = state.locked
