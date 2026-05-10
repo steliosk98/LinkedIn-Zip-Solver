@@ -15,6 +15,8 @@ The popup lets you:
 - lock the path with `Path Drawn`
 - replay the saved moves with `Solve`
 
+Or skip drawing entirely: click `Use today's answer` to load and lock the current LinkedIn ZIP solution from [zipgameonline.com/linkedin-zip-answers](https://www.zipgameonline.com/linkedin-zip-answers). The popup picks up the published grid size and start cell automatically.
+
 Tip: the included `test-page.html` is the quickest way to verify the replay visually while tuning paths and board sizes.
 
 ## Screenshots
@@ -47,6 +49,10 @@ Tip: the included `test-page.html` is the quickest way to verify the replay visu
 5. Drag through adjacent cells to record the route.
 6. Click `Path Drawn` to lock and save it.
 7. Open the target page and click `Solve`.
+
+### Auto-fill from zipgameonline.com
+
+Instead of steps 2–6, click `Use today's answer`. The popup fetches the answers page, extracts the SVG polyline for today's puzzle, and converts it into the same `{startPoint, moves, gridSize}` shape used by manual capture. The route lands locked, so you can go straight to `Solve`. If the page is unreachable or its markup changes, the feedback area surfaces the error and your previous path is left untouched until the auto-fill succeeds.
 
 The extension stores one active path in `chrome.storage.local`:
 
@@ -105,6 +111,7 @@ The test page:
 
 - one saved path at a time
 - mouse-based path drawing
+- one-click auto-fill of today's solution from zipgameonline.com
 - configurable grid size
 - popup-based workflow only
 - replay through synthetic arrow-key events
