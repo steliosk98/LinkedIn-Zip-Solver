@@ -691,23 +691,24 @@ async function runSolveOnPage(payload) {
 
   function findTarget() {
     const selectors = [
-      ":focus",
-      "input",
-      "textarea",
-      "[contenteditable='true']",
       "[data-zip-solver-target='true']",
       "[role='application']",
       "[role='grid']",
-      "[tabindex='0']",
       "main",
+      "[tabindex='0']",
       "body",
     ];
 
     for (const selector of selectors) {
       const nodes = Array.from(document.querySelectorAll(selector));
+      // Skip nodes that refuse focus (e.g. LinkedIn's search bar sits in an [inert] container).
       const candidate = nodes.find((node) => {
         const rect = node.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
+        if (rect.width === 0 || rect.height === 0) {
+          return false;
+        }
+        node.focus({ preventScroll: true });
+        return document.activeElement === node;
       });
       if (candidate) {
         return candidate;
